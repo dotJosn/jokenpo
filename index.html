@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR"></html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jokenpo Competitivo</title>
+    <link rel="stylesheet" href="./styles/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="title">
+            <h1>Jokenpo Competitivo</H1>
+            <p>Pedra, Papel ou Tesoura? A equipe vencedora ganha a rodada!</p>
+        </div>
+
+        <div class="team-info">
+            <label for="teamNameInput">Seu Codinome de Equipe:</label>
+            <input type="text" id="teamNameInput" placeholder="Ex: Equipe Zeta" maxlength="15">
+            <button id="setTeamNameButton">Confirmar Equipe</button>
+        </div>
+
+        <div class="jokenpo-buttons">
+            <button id="pedraButton" data-move="pedra" disabled>Pedra</button>
+            <button id="papelButton" data-move="papel" disabled>Papel</button>
+            <button id="tesouraButton" data-move="tesoura" disabled>Tesoura</button>
+        </div>
+
+        <p id="message"></p>
+        <p id="game-status">Aguardando seu codinome...</p>
+        <p id="winner-team-name"></p>
+
+        <div class="stats">
+            <div class="stat-item">
+                <p>Sua Equipe:</p>
+                <strong><span id="player-team-name">?</span></strong>
+                <p>Sua Jogada:</p>
+                <strong><span id="player-move">?</span></strong>
+            </div>
+            <div class="stat-item">
+                <p>Oponente:</p>
+                <strong><span id="opponent-team-name">?</span></strong>
+                <p>Jogada do Oponente:</p>
+                <strong><span id="opponent-move">?</span></strong>
+            </div>
+        </div>
+        <p>Rodada: <strong><span id="round-counter">0</p> </div>
+    <script src="./scripts/script.js"></script>
+</body>
+</html>
