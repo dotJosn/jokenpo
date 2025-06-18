@@ -20,17 +20,16 @@
             <div id="team-info">
                 <label for="teamNameInput">Seu Codinome de Equipe:</label>
                 <input type="text" id="teamNameInput" placeholder="Ex: Equipe Zeta" maxlength="15">
+                <p id="game-status">Aguardando seu codinome...</p>
                 <button id="setTeamNameButton">Confirmar Equipe</button>
             </div>
 
             <div id="jokenpo-buttons">
-                <button id="pedraButton" data-move="pedra" disabled>Pedra</button>
-                <button id="papelButton" data-move="papel" disabled>Papel</button>
-                <button id="tesouraButton" data-move="tesoura" disabled>Tesoura</button>
+                <button id="pedraButton" data-move="pedra">Pedra</button>
+                <button id="papelButton" data-move="papel">Papel</button>
+                <button id="tesouraButton" data-move="tesoura">Tesoura</button>
             </div>
 
-            <p id="message"></p>
-            <p id="game-status">Aguardando seu codinome...</p>
             <p id="winner-team-name"></p>
 
             <div class="stats">
@@ -47,7 +46,9 @@
                     <strong><span id="opponent-move">?</span></strong>
                 </div>
             </div>
-            <p>Rodada: <strong><span id="round-counter">0</p>
+            <p>Rodada: <span id="round-counter">0</p>
+
+            <p id="message"></p>
         </section>
     </section>
     <script src="./scripts/script.js"></script>
