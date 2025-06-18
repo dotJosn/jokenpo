@@ -1,8 +1,19 @@
+:root {
+    --black: #000;
+    --gray-600: #414141;
+    --gray-100: #c4c2cc;
+    --purple-500: #73278a;
+    --purple-300: #9749af;
+    --white: #fff;
+}
+
 * {
     border: 0;
     margin: 0;
     padding: 0;
     gap: 0;
+    font-size: large;
+    color: var(--gray-100);
 }
 
 .container {
@@ -10,13 +21,74 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    background-color: var(--gray-600);
+}
+
+#header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 3%;
 }
 
 .title {
-    justify-content: start;
+    font-size: xx-large;
 }
 
-.team-info {
+#game {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 3%;
+    height: auto;
+}
+
+#game #team-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
+    gap: 8%;
+}
+
+#game #team-info input {
+    border: solid 1px var(--black);
+    background-color: var(--gray-600);
+    border-radius: 5px;
+    padding: 2%;
+}
+
+#game #team-info button {
+    background-color: var(--purple-500);
+    border: solid 1px var(--black);
+    color: var(--black);
+    padding: 2%;
+    border-radius: 5px;
+}
+
+#game #team-info button:hover {
+    border: solid 1px var(--white);
+    color: var(--white);
+    cursor: pointer;
+}
+
+#game #jokenpo-buttons {
+    padding: 12%;
+    display: flex;
+    justify-content: center;
+    gap: 7%;
+}
+
+#game #jokenpo-buttons button {
+    background-color: var(--purple-300);
+    border: solid 1px var(--black);
+    color: var(--black);
+    padding: 2%;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#game #jokenpo-buttons button:hover {
+    border: solid 1px var(--white);
+    color: var(--white);
 }
