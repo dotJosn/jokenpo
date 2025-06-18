@@ -1,150 +1,152 @@
 document.addEventListener('DOMContentLoaded', () => {
-    var playerId = localStorage.getItem('playerId');   
-    if (!playerId) {
-        playerId = 'browser_' + Math.random().toString(36).substring(2, 9); 
-        localStorage.setItem('playerId', playerId);
-    }
+    const playerId = localStorage.getItem('playerId') || `browser_${Math.random().toString(36).substring(2, 9)}`;
+    localStorage.setItem('playerId', playerId);
 
-    const teamNameInput = document.getElementById('teamNameInput');
-    const setTeamNameButton = document.getElementById('setTeamNameButton');
-    const pedraButton = document.getElementById('pedraButton');
-    const papelButton = document.getElementById('papelButton');
-    const tesouraButton = document.getElementById('tesouraButton');
-    const messageDisplay = document.getElementById('message');
-    const playerTeamNameDisplay = document.getElementById('player-team-name');
-    const playerMoveDisplay = document.getElementById('player-move');
-    const opponentTeamNameDisplay = document.getElementById('opponent-team-name');
-    const opponentMoveDisplay = document.getElementById('opponent-move');
-    const gameStatusDisplay = document.getElementById('game-status');
-    const winnerTeamNameDisplay = document.getElementById('winner-team-name');
-    const roundCounterDisplay = document.getElementById('round-counter');
+    // Elementos DOM
+    const elements = {
+        teamNameInput: document.getElementById('teamNameInput'),
+        setTeamNameButton: document.getElementById('setTeamNameButton'),
+        pedraButton: document.getElementById('pedraButton'),
+        papelButton: document.getElementById('papelButton'),
+        tesouraButton: document.getElementById('tesouraButton'),
+        messageDisplay: document.getElementById('message'),
+        playerTeamNameDisplay: document.getElementById('player-team-name'),
+        playerMoveDisplay: document.getElementById('player-move'),
+        opponentTeamNameDisplay: document.getElementById('opponent-team-name'),
+        opponentMoveDisplay: document.getElementById('opponent-move'),
+        gameStatusDisplay: document.getElementById('game-status'),
+        winnerTeamNameDisplay: document.getElementById('winner-team-name'),
+        roundCounterDisplay: document.getElementById('round-counter')
+    };
 
     const SERVER_URL = 'http://52.5.245.24:8080/jokenpo/play';
-
-    let currentTeamName = '';
+    let currentTeamName = localStorage.getItem('teamName') || '';
     let playerMadeMove = false;
 
-    // Tenta carregar o codinome da equipe
-    const storedTeamName = localStorage.getItem('teamName');
-    if (storedTeamName) {
-        teamNameInput.value = storedTeamName;
-        currentTeamName = storedTeamName;
-        playerTeamNameDisplay.textContent = currentTeamName;
-        enableGameInteraction();
-        gameStatusDisplay.textContent = 'Codinome carregado. Pronto para jogar Jokenpo!';
-        sendJokenpoMove(null) 
-    } else {
-        gameStatusDisplay.textContent = 'Por favor, insira o codinome da sua equipe.';
-    }
+    // Inicialização
+    init();
 
-    function enableGameInteraction() {
-        teamNameInput.disabled = true;
-        setTeamNameButton.disabled = true;
-        pedraButton.disabled = false;
-        papelButton.disabled = false;
-        tesouraButton.disabled = false;
-    }
-
-    function disableGameInteraction() {
-        pedraButton.disabled = true;
-        papelButton.disabled = true;
-        tesouraButton.disabled = true;
-    }
-
-    setTeamNameButton.addEventListener('click', () => {
-        currentTeamName = teamNameInput.value.trim();
+    function init() {
         if (currentTeamName) {
-            localStorage.setItem('teamName', currentTeamName);
-            playerTeamNameDisplay.textContent = currentTeamName;
+            elements.teamNameInput.value = currentTeamName;
+            elements.playerTeamNameDisplay.textContent = currentTeamName;
             enableGameInteraction();
-            gameStatusDisplay.textContent = 'Equipe registrada. Faça sua jogada!';
-            messageDisplay.textContent = '';
-            winnerTeamNameDisplay.textContent = '';
-            playerMoveDisplay.textContent = '?';
-            opponentMoveDisplay.textContent = '?';
-            sendJokenpoMove(null); // Envia jogada nula para registrar a equipe no servidor
+            elements.gameStatusDisplay.textContent = 'Codinome carregado. Pronto para jogar Jokenpo!';
+            sendJokenpoMove(null);
         } else {
-            alert('Por favor, insira o codinome da sua equipe!');
-            teamNameInput.focus();
+            elements.gameStatusDisplay.textContent = 'Por favor, insira o codinome da sua equipe.';
+            disableGameInteraction();
         }
-    });
 
-    // Adiciona event listeners para os botões de jogada
-    document.querySelectorAll('.jokenpo-buttons button').forEach(button => {
-        button.addEventListener('click', () => {
-            if (!playerMadeMove) {
-                const playerMove = button.dataset.move;
-                sendJokenpoMove(playerMove);
-                playerMadeMove = true;
-                disableGameInteraction();
-            }
-        }) 
-    });
+        // Event listeners
+        elements.setTeamNameButton.addEventListener('click', handleTeamNameSet);
+        document.querySelectorAll('.jokenpo-buttons button').forEach(button => {
+            button.addEventListener('click', () => handleMove(button.dataset.move));
+        });
+    }
+
+    function handleTeamNameSet() {
+        const teamName = elements.teamNameInput.value.trim();
+        if (!teamName) {
+            showAlert('Por favor, insira o codinome da sua equipe!');
+            elements.teamNameInput.focus();
+            return;
+        }
+        currentTeamName = teamName;
+        localStorage.setItem('teamName', currentTeamName);
+        elements.playerTeamNameDisplay.textContent = currentTeamName;
+        enableGameInteraction();
+        resetGameUI();
+        elements.gameStatusDisplay.textContent = 'Equipe registrada. Faça sua jogada!';
+        sendJokenpoMove(null);
+    }
+
+    function handleMove(playerMove) {
+        if (!playerMadeMove) {
+            sendJokenpoMove(playerMove);
+            playerMadeMove = true;
+            disableGameInteraction();
+        }
+    }
 
     async function sendJokenpoMove(playerMove) {
         if (!currentTeamName) {
-            alert('Por favor, confirme o codinome da sua equipe primeiro.');
+            showAlert('Por favor, confirme o codinome da sua equipe primeiro.');
             return;
         }
-
         try {
             const response = await fetch(SERVER_URL, {
-                method: 'GET', 
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ playerId, teamName: currentTeamName, playerMove })
             });
-
-            if (!response.ok) {
-                throw new Error(`Erro HTTP! Status: ${response.status}`);
-            }
-
+            if (!response.ok) throw new Error(`Erro HTTP! Status: ${response.status}`);
             const data = await response.json();
             updateUI(data);
-
             if (data.status === 'game_over') {
                 setTimeout(() => {
-                    playerMadeMove = false;
-                    enableGameInteraction();
-                    playerMoveDisplay.textContent = '?';
-                    opponentMoveDisplay.textContent = '?';
-                    winnerTeamNameDisplay.textContent = '';
-                    messageDisplay.textContent = 'Nova rodada! Faça sua jogada.';
-                }, 500); 
+                    resetRound();
+                    elements.messageDisplay.textContent = 'Nova rodada! Faça sua jogada.';
+                }, 2000);
             }
-
         } catch (error) {
             console.error('Erro ao enviar jogada Jokenpo:', error);
-            messageDisplay.textContent = 'Erro ao conectar ao servidor. Verifique o console.';
-            enableGameInteraction();
-            playerMadeMove = false;
+            elements.messageDisplay.textContent = 'Erro ao conectar ao servidor. Tente novamente.';
+            resetRound();
         }
     }
 
     function updateUI(data) {
-        playerTeamNameDisplay.textContent = data.playerTeamName;
-        playerMoveDisplay.textContent = data.playerMove || '?';
-        opponentTeamNameDisplay.textContent = data.opponentTeamName || 'Aguardando...';
-        opponentMoveDisplay.textContent = data.opponentMove || '?';
-        roundCounterDisplay.textContent = data.round || '0';
-
-        if (data.status === 'waiting_opponent') {
-            messageDisplay.textContent = data.message;
-            gameStatusDisplay.textContent = 'Aguardando a jogada do oponente...';
-            winnerTeamNameDisplay.textContent = '';
-        } else if (data.status === 'game_over') {
-            messageDisplay.textContent = data.message;
-            gameStatusDisplay.textContent = `Rodada ${data.round} Finalizada!`;
-            winnerTeamNameDisplay.textContent = `Vencedor: ${data.winnerTeam}!`;
-        } else {
-            messageDisplay.textContent = data.message;
-            gameStatusDisplay.textContent = 'Estado Desconhecido';
+        elements.playerTeamNameDisplay.textContent = data.playerTeamName || currentTeamName;
+        elements.playerMoveDisplay.textContent = data.playerMove || '?';
+        elements.opponentTeamNameDisplay.textContent = data.opponentTeamName || 'Aguardando...';
+        elements.opponentMoveDisplay.textContent = data.opponentMove || '?';
+        elements.roundCounterDisplay.textContent = data.round || '0';
+        switch (data.status) {
+            case 'waiting_opponent':
+                elements.messageDisplay.textContent = data.message;
+                elements.gameStatusDisplay.textContent = 'Aguardando a jogada do oponente...';
+                elements.winnerTeamNameDisplay.textContent = '';
+                break;
+            case 'game_over':
+                elements.messageDisplay.textContent = data.message;
+                elements.gameStatusDisplay.textContent = `Rodada ${data.round} Finalizada!`;
+                elements.winnerTeamNameDisplay.textContent = data.winnerTeam ? `Vencedor: ${data.winnerTeam}!` : 'Empate!';
+                break;
+            default:
+                elements.messageDisplay.textContent = data.message || 'Estado Desconhecido';
+                elements.gameStatusDisplay.textContent = 'Jogo em andamento...';
         }
     }
 
-    // Desabilita interação inicial até que o codinome seja definido
-    disableGameInteraction();
-    teamNameInput.disabled = false;
-    setTeamNameButton.disabled = false;
+    function enableGameInteraction() {
+        elements.teamNameInput.disabled = true;
+        elements.setTeamNameButton.disabled = true;
+        elements.pedraButton.disabled = false;
+        elements.papelButton.disabled = false;
+        elements.tesouraButton.disabled = false;
+    }
+
+    function disableGameInteraction() {
+        elements.pedraButton.disabled = true;
+        elements.papelButton.disabled = true;
+        elements.tesouraButton.disabled = true;
+    }
+
+    function resetRound() {
+        playerMadeMove = false;
+        enableGameInteraction();
+        elements.playerMoveDisplay.textContent = '?';
+        elements.opponentMoveDisplay.textContent = '?';
+        elements.winnerTeamNameDisplay.textContent = '';
+    }
+
+    function resetGameUI() {
+        resetRound();
+        elements.messageDisplay.textContent = '';
+    }
+
+    function showAlert(msg) {
+        window.alert(msg);
+    }
 });
