@@ -24,6 +24,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentTeamName = localStorage.getItem("teamName") || "";
   let playerMadeMove = false;
 
+  // Variável para controlar o intervalo de polling
+  let pollingInterval = null;
+
   init();
 
   function init() {
@@ -58,6 +61,9 @@ document.addEventListener("DOMContentLoaded", () => {
         handleMove(this.dataset.move);
       });
     });
+
+    // Inicializa tratamento de conexão
+    handleConnectionIssues();
   }
 
   function handleTeamNameSet() {
@@ -139,7 +145,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       updateUI(data);
 
-      if (data.status === "game_over") {
+      if (data.status === "waiting_opponent" && playerMove !== null) {
+        console.log("Configurando verificação periódica para jogada do oponente");
+        startPollingForOpponentMove();
+      } else if (data.status === "game_over") {
+        stopPollingForOpponentMove();
         setTimeout(() => {
           resetRound();
           elements.messageDisplay.textContent = "Nova rodada! Faça sua jogada.";
@@ -150,6 +160,52 @@ document.addEventListener("DOMContentLoaded", () => {
       elements.messageDisplay.textContent =
         "Erro ao conectar ao servidor. Tente novamente.";
       resetRound();
+    }
+  }
+
+  function startPollingForOpponentMove() {
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+    }
+
+    pollingInterval = setInterval(async () => {
+      try {
+        console.log("Verificando status da jogada...");
+
+        const response = await fetch(SERVER_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            playerId,
+            teamName: currentTeamName,
+            playerMove: null,
+          }),
+        });
+
+        if (!response.ok) throw new Error(`Erro HTTP! Status: ${response.status}`);
+
+        const data = await response.json();
+        console.log("Dados da verificação:", data);
+
+        updateUI(data);
+
+        if (data.status === "game_over") {
+          stopPollingForOpponentMove();
+          setTimeout(() => {
+            resetRound();
+            elements.messageDisplay.textContent = "Nova rodada! Faça sua jogada.";
+          }, 2000);
+        }
+      } catch (error) {
+      }
+    }, 3000);
+  }
+
+  function stopPollingForOpponentMove() {
+    if (pollingInterval) {
+      console.log("Parando verificação periódica");
+      clearInterval(pollingInterval);
+      pollingInterval = null;
     }
   }
 
@@ -204,11 +260,26 @@ document.addEventListener("DOMContentLoaded", () => {
     elements.playerMoveDisplay.textContent = "?";
     elements.opponentMoveDisplay.textContent = "?";
     elements.winnerTeamNameDisplay.textContent = "";
+    stopPollingForOpponentMove();
   }
 
   function resetGameUI() {
     resetRound();
     elements.messageDisplay.textContent = "";
+  }
+
+  function handleConnectionIssues() {
+    window.addEventListener('online', () => {
+      console.log('Conexão restabelecida, verificando status do jogo...');
+      elements.messageDisplay.textContent = 'Conexão restabelecida. Verificando status do jogo...';
+      sendJokenpoMove(null);
+    });
+
+    window.addEventListener('offline', () => {
+      console.log('Conexão perdida');
+      elements.messageDisplay.textContent = 'Conexão perdida. Aguardando reconexão...';
+      stopPollingForOpponentMove();
+    });
   }
 
   function showAlert(msg) {
